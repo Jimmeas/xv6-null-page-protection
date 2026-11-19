@@ -7,13 +7,6 @@
 #include "syscall.h"
 #include "sysfunc.h"
 
-extern int SecondPart(void); // Declare system call for SecondPart
-extern int ThirdPart(void); // Declare system call for ThirdPart
-extern int sys_getpinfo(void);
-
-int partBcount=0; // Variable for SecondPart
-int partCcount=0; // Variable for ThirdPart
-
 // User code makes a system call with INT T_SYSCALL.
 // System call number in %eax.
 // Arguments on the stack, from the user call to the C
@@ -119,11 +112,6 @@ static int (*syscalls[])(void) = {
 [SYS_wait]    sys_wait,
 [SYS_write]   sys_write,
 [SYS_uptime]  sys_uptime,
-[SYS_FirstPart] sys_FirstPart, // Function pointer to handlers for FirstPart
-[SYS_SecondPart] sys_SecondPart, // Function pointer to handlers for SecondPart
-[SYS_ThirdPart] sys_ThirdPart, // Function pointer to handlers for ThirdPart
-[SYS_myps] sys_myps,
-[SYS_getpinfo] sys_getpinfo,
 };
 
 // Called on a syscall trap. Checks that the syscall number (passed via eax)
@@ -132,17 +120,10 @@ void
 syscall(void)
 {
   int num;
-  // Increments the count by one before a system call is issued in SecondPart
-  partBcount++;
   
   num = proc->tf->eax;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num] != NULL) {
     proc->tf->eax = syscalls[num]();
-    
-    // If statement to increment after the system call returns did not return -one
-    if(proc->tf->eax != -1) {
-      partCcount++;
-    }
   } else {
     cprintf("%d %s: unknown sys call %d\n",
             proc->pid, proc->name, num);
